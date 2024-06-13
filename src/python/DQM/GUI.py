@@ -102,8 +102,7 @@ class DQMUpload:
         headers = request.headers
         prefix = suffix = ""
         hkeys = headers.keys()
-        hkeys.sort()
-        for hk in hkeys:
+        for hk in sorted(hkeys):
             hk = hk.lower()
             if hk[0:9] in ["cms-authn", "cms-authz"] and hk != "cms-authn-hmac":
                 prefix += "h%xv%x" % (len(hk), len(headers[hk]))
@@ -119,8 +118,7 @@ class DQMUpload:
         _logerr("Authentication Failure, details follow.")
         headers = request.headers
         hkeys = headers.keys()
-        hkeys.sort()
-        for hk in hkeys:
+        for hk in sorted(hkeys):
             hk = hk.lower()
             _logerr("%s --> %s" % (hk, headers[hk]))
 
