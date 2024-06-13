@@ -108,7 +108,9 @@ class DQMUpload:
                 prefix += "h%xv%x" % (len(hk), len(headers[hk]))
                 suffix += "%s%s" % (hk, headers[hk])
 
-        vfy = hmac.new(self.key, prefix + "#" + suffix, hashlib.sha1).hexdigest()
+        vfy = hmac.new(
+            self.key, f"{prefix}#{suffix}".encode(), hashlib.sha1
+        ).hexdigest()
         return vfy == headers["cms-authn-hmac"]
 
     def _log_authentication_failure_and_exit(self):
@@ -133,7 +135,7 @@ class DQMFileAccess(DQMUpload):
         self.server = server
         self.uploads = uploads
         self.roots = roots
-        self.key = ""
+        self.key = b""
         if uploads and not os.path.exists(uploads):
             os.makedirs(uploads)
         if aclfile and os.path.exists(aclfile):
@@ -975,7 +977,7 @@ class DQMWorkspace:
         add=None,
         zoom=None,
         certzoom=None,
-        **kwargs
+        **kwargs,
     ):
         if samplevary != None:
             if not isinstance(samplevary, str) or samplevary not in (
