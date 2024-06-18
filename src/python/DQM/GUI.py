@@ -532,7 +532,7 @@ class DQMToJSON(Accelerator.DQMToJSON):
         sources = dict(
             (s.plothook, s) for s in self.server.sources if getattr(s, "plothook", None)
         )
-        (stamp, result) = self._samples(sources.values(), options)
+        (stamp, result) = self._samples(list(sources.values()), options)
         response.headers["Content-Type"] = "text/plain"
         response.headers["Last-Modified"] = httputil.HTTPDate(stamp)
         return result
@@ -675,7 +675,7 @@ class DQMStripChartSource(Accelerator.DQMStripChartSource):
             if srcname in sources and srcname != "unknown":
                 info = (sources[srcname], int(runnr), "/" + dataset)
 
-        a = self._plot(sources.values(), info, "/".join(path), options)
+        a = self._plot(list(sources.values()), info, "/".join(path), options)
         return (a[0], bytes(a[1]))
 
 

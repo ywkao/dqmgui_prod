@@ -1152,7 +1152,7 @@ class ProdMonSource:
     def _getWFTop(self, count, sortkey="MERGED_EVTS"):
         wfsummary = self.cache.cacheFetch("PA_WFSUMMARY", self._getWFSummary)
 
-        wflist = wfsummary.keys()
+        wflist = list(wfsummary.keys())
         wflist.sort(key=lambda x: int(wfsummary[x][sortkey]))
         wflist.reverse()
         wflist = wflist[0:count]

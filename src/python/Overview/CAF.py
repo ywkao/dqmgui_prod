@@ -11,6 +11,10 @@ from cherrypy import engine
 import time, json, re
 
 
+def cmp(a, b):
+    return (a > b) - (a < b)
+
+
 class CAFDataProvider(Thread):
     DATAURL = (
         "http://cmsweb.cern.ch/phedex/datasvc/json/prod/blockreplicas?node=T2_CH_CAF"
