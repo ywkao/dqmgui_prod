@@ -35,7 +35,7 @@ preliminary_checks() {
 # then dumps the Index' catalogue to the TMP_CATALOGUE_FILE
 dump_catalogue() {
     source $(find $INSTALLATION_DIR/current/ -name "env.sh" | head -1)
-    visDQMIndex dump $INSTALLATION_DIR/state/dqmgui/$FLAVOR/ix128 catalogue >$TMP_CATALOGUE_FILE
+    visDQMIndex dump $INSTALLATION_DIR/state/dqmgui/$FLAVOR/ix128 catalogue >"${TMP_CATALOGUE_FILE}_${FLAVOR}"
 }
 
 check_index_limits_and_send_email() {
@@ -43,7 +43,7 @@ check_index_limits_and_send_email() {
     msg=
     # Run over all tree types
     for i in $(seq 0 $((${#_tree_types[@]} - 1))); do
-        tree_current_size=$(grep "${_tree_types[$i]}" $TMP_CATALOGUE_FILE | wc -l)
+        tree_current_size=$(grep "${_tree_types[$i]}" "${TMP_CATALOGUE_FILE}_${FLAVOR}" | wc -l)
         tree_limit=$(grep -oE "${_tree_types_limit_name[$i]}[[:space:]]+[0-9]+" "$visdqmindex_header_file" | awk '{print $2}')
         echo "Found $tree_current_size ${_tree_types[$i]} in the catalogue. Limit is $tree_limit."
         # Check if alarm threshold is exceeded
@@ -58,7 +58,7 @@ check_index_limits_and_send_email() {
 }
 
 cleanup() {
-    rm -rf $TMP_CATALOGUE_FILE
+    rm -rf "${TMP_CATALOGUE_FILE}_${FLAVOR}"
 }
 
 ### Main script
