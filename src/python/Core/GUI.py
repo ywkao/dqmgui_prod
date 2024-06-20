@@ -6,12 +6,12 @@
 # such as file and socket operations.  On "straight" python code the
 # interpreter yields the lock only every N byte code instructions;
 # this server configures a large N (1'000'000).
-
+import ssl
 from importlib import import_module
 from imp import get_suffixes
 from copy import deepcopy
 from html import escape
-from socket import gethostname, getaddrinfo
+from socket import gethostname
 from threading import Thread, Lock
 from cherrypy import expose, HTTPError, request, response, engine, log, tools
 from cherrypy.lib.static import serve_file
@@ -824,7 +824,7 @@ class Server:
         if not "url" in kwargs.keys():
             return "{}"
 
-        longUrl = base64.b64decode(kwargs["url"])
+        longUrl = base64.b64decode(kwargs["url"]).decode("utf-8")
         shortUrl = longUrl
 
         try:
@@ -833,18 +833,16 @@ class Server:
             # Timeout is ignored in the part of URL to IP resolution,
             # so do it seperately.
             # See: https://stackoverflow.com/a/28674109/6562491
-            tinyurl_ip, tinyurl_port = getaddrinfo("tinyurl.com", 443)[0][-1]
-            connection = client.HTTPSConnection(
-                host=tinyurl_ip, port=tinyurl_port, timeout=3
-            )
+
+            connection = client.HTTPSConnection(host="tinyurl.com", port=443, timeout=3)
             connection.request("GET", f"/api-create.php?url={longUrl}")
             response = connection.getresponse()
 
             if response.status == 200:
-                shortUrl = response.read()
+                shortUrl = response.read().decode("utf-8")
             else:
                 log(
-                    f"WARNING: urlshortener returned status: {response.status} for url: {longUrl}",
+                    f"WARNING: urlshortener returned status: {response.status} and response: {response.read().decode()} for url: {longUrl}",
                     severity=logging.WARNING,
                 )
 
@@ -852,11 +850,7 @@ class Server:
         except Exception as e:
             log(f"WARNING: unable to shorten URL: {longUrl}. Reason: {repr(e)}")
 
-        return (
-            '{"id": "%s"}' % shortUrl.decode("utf-8")
-            if isinstance(shortUrl, bytes)
-            else shortUrl
-        )
+        return '{"id": "%s"}' % shortUrl
 
     def sessionIndex(self, session, *args, **kwargs):
         """Generate top level session index.  This produces the main GUI web
