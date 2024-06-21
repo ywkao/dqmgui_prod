@@ -45,7 +45,8 @@ check_index_limits_and_send_email() {
     for i in $(seq 0 $((${#_tree_types[@]} - 1))); do
         tree_current_size=$(grep "${_tree_types[$i]}" "${TMP_CATALOGUE_FILE}_${FLAVOR}" | wc -l)
         tree_limit=$(grep -oE "${_tree_types_limit_name[$i]}[[:space:]]+[0-9]+" "$visdqmindex_header_file" | awk '{print $2}')
-        echo "Found $tree_current_size ${_tree_types[$i]} in the catalogue. Limit is $tree_limit."
+        percent_full=$(bc -l <<<"($tree_current_size/$tree_limit)*100")
+        echo "Found $tree_current_size ${_tree_types[$i]} in the catalogue. Limit is $tree_limit ($(printf '%.2f' $percent_full)%)"
         # Check if alarm threshold is exceeded
         threshold=$(printf '%.0f' $(bc <<<"$ALERT_THRESHOLD * $tree_limit"))
         if [ $tree_current_size -gt $threshold ]; then
