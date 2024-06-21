@@ -25,8 +25,8 @@ preliminary_checks() {
         exit 1
     fi
     # Needed to get the index limits
-    if ! find $INSTALLATION_DIR/current/ -name "VisDQMIndex.h"; then
-        echo "Could not find required file \"VisDQMIndex.h\" in $INSTALLATION_DIR"
+    if [ ! -f "$INSTALLATION_DIR/current/apps/dqmgui/128/src/cpp/DQM/VisDQMIndex.h" ]; then
+        echo "Could not find required \"VisDQMIndex.h\" file in $INSTALLATION_DIR"
         exit 1
     fi
 }
@@ -34,12 +34,12 @@ preliminary_checks() {
 # Sources the env.sh file needed for activating the DQMGUI environment,
 # then dumps the Index' catalogue to the TMP_CATALOGUE_FILE
 dump_catalogue() {
-    source $(find $INSTALLATION_DIR/current/ -name "env.sh" | head -1)
+    source $INSTALLATION_DIR/current/apps/dqmgui/128/etc/profile.d/env.sh
     visDQMIndex dump $INSTALLATION_DIR/state/dqmgui/$FLAVOR/ix128 catalogue >"${TMP_CATALOGUE_FILE}_${FLAVOR}"
 }
 
 check_index_limits_and_send_email() {
-    visdqmindex_header_file=$(find $INSTALLATION_DIR/current/ -name "VisDQMIndex.h" | head -1)
+    visdqmindex_header_file="$INSTALLATION_DIR/current/apps/dqmgui/128/src/cpp/DQM/VisDQMIndex.h"
     msg=
     # Run over all tree types
     for i in $(seq 0 $((${#_tree_types[@]} - 1))); do
