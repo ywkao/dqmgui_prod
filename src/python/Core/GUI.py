@@ -6,7 +6,6 @@
 # such as file and socket operations.  On "straight" python code the
 # interpreter yields the lock only every N byte code instructions;
 # this server configures a large N (1'000'000).
-import ssl
 from importlib import import_module
 from imp import get_suffixes
 from copy import deepcopy
