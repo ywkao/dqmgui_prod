@@ -102,14 +102,15 @@ class DQMUpload:
         headers = request.headers
         prefix = suffix = ""
         hkeys = headers.keys()
-        hkeys.sort()
-        for hk in hkeys:
+        for hk in sorted(hkeys):
             hk = hk.lower()
             if hk[0:9] in ["cms-authn", "cms-authz"] and hk != "cms-authn-hmac":
                 prefix += "h%xv%x" % (len(hk), len(headers[hk]))
                 suffix += "%s%s" % (hk, headers[hk])
 
-        vfy = hmac.new(self.key, prefix + "#" + suffix, hashlib.sha1).hexdigest()
+        vfy = hmac.new(
+            self.key, f"{prefix}#{suffix}".encode(), hashlib.sha1
+        ).hexdigest()
         return vfy == headers["cms-authn-hmac"]
 
     def _log_authentication_failure_and_exit(self):
@@ -119,8 +120,7 @@ class DQMUpload:
         _logerr("Authentication Failure, details follow.")
         headers = request.headers
         hkeys = headers.keys()
-        hkeys.sort()
-        for hk in hkeys:
+        for hk in sorted(hkeys):
             hk = hk.lower()
             _logerr("%s --> %s" % (hk, headers[hk]))
 
@@ -135,7 +135,7 @@ class DQMFileAccess(DQMUpload):
         self.server = server
         self.uploads = uploads
         self.roots = roots
-        self.key = ""
+        self.key = b""
         if uploads and not os.path.exists(uploads):
             os.makedirs(uploads)
         if aclfile and os.path.exists(aclfile):
@@ -532,7 +532,7 @@ class DQMToJSON(Accelerator.DQMToJSON):
         sources = dict(
             (s.plothook, s) for s in self.server.sources if getattr(s, "plothook", None)
         )
-        (stamp, result) = self._samples(sources.values(), options)
+        (stamp, result) = self._samples(list(sources.values()), options)
         response.headers["Content-Type"] = "text/plain"
         response.headers["Last-Modified"] = httputil.HTTPDate(stamp)
         return result
@@ -675,7 +675,7 @@ class DQMStripChartSource(Accelerator.DQMStripChartSource):
             if srcname in sources and srcname != "unknown":
                 info = (sources[srcname], int(runnr), "/" + dataset)
 
-        a = self._plot(sources.values(), info, "/".join(path), options)
+        a = self._plot(list(sources.values()), info, "/".join(path), options)
         return (a[0], bytes(a[1]))
 
 
@@ -977,7 +977,7 @@ class DQMWorkspace:
         add=None,
         zoom=None,
         certzoom=None,
-        **kwargs
+        **kwargs,
     ):
         if samplevary != None:
             if not isinstance(samplevary, str) or samplevary not in (

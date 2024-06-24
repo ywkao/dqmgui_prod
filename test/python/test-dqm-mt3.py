@@ -39,7 +39,7 @@ class StripSource(Native.DQMStripChartSource):
         )
         (srcname, runnr, dataset) = options.get("current").split("/", 2)
         info = (sources[srcname], int(runnr), "/" + dataset)
-        return self._plot(sources.values(), info, "/".join(path), options)
+        return self._plot(list(sources.values()), info, "/".join(path), options)
 
 
 wsnames = []
