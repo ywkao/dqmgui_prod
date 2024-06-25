@@ -235,7 +235,7 @@ while True:
                 return (a > b) - (a < b)
 
             runDS.setdefault(sample["type"], {})
-            for tp in sorted(sample["items"], cmp=lambda x, y: cmp(x["run"], y["run"]))[
+            for tp in sorted(sample["items"], key=lambda x, y: cmp(x["run"], y["run"]))[
                 :-1
             ]:
                 newSample = (
