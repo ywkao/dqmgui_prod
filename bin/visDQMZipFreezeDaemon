@@ -58,7 +58,7 @@ while True:
             # number) to freeze list. For the most recent one, check the
             # zinfo file contents to determine if the zip is old enough to
             # be frozen.
-            zlist = sorted(new[key], cmp=lambda x, y: cmp(x[1], y[1]), reverse=True)
+            zlist = sorted(new[key], key=lambda x, y: cmp(x[1], y[1]), reverse=True)
             for zf in zlist[1:]:
                 freeze.append(zf[0])
 
