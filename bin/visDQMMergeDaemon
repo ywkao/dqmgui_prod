@@ -5,7 +5,7 @@ from traceback import print_exc
 from Monitoring.Core.Utils.Common import logme
 from tempfile import mkstemp
 from glob import glob
-
+from functools import cmp_to_key
 
 DROPBOX = sys.argv[1]  # Directory where we receive input ("drop box").
 FILEREPO = sys.argv[2]  # Final file repository of original DQM files.
@@ -67,7 +67,7 @@ while True:
         # Merge new ROOT files by run using pattern from receiver.  First
         # build list of files to merge, then merge them.
         merge = {}
-        for info in sorted(new, orderFiles):
+        for info in sorted(new, key=cmp_to_key(orderFiles)):
             fname = "%s/%s" % (FILEREPO, info["path"])
             finfo = "%s.dqminfo" % fname
             version = 1
