@@ -87,7 +87,7 @@ while True:
             zinfopath = "%s/%s.zinfo" % (ZIPREPO, info["zpath"])
             (dname, filepart) = zinfopath.rsplit("/", 1)
             (fd, tmp) = mkstemp(dir=dname)
-            os.write(fd, "%s\n" % info)
+            os.write(fd, f"{info}\n".encode())
             os.close(fd)
             os.chmod(tmp, 0o666 & ~myumask)
             os.rename(tmp, zinfopath)

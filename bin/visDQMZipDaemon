@@ -6,6 +6,7 @@ from Monitoring.Core.Utils.Common import logme
 from tempfile import mkstemp
 from glob import glob
 from stat import *
+from functools import cmp_to_key
 
 
 DROPBOX = sys.argv[1]  # Directory where we receive input ("drop box").
@@ -72,7 +73,7 @@ while True:
         # pattern decided by the receiver. Also keep track of how many
         # times the container has been processed by this agent.
         zips = {}
-        for info in sorted(new, orderFiles):
+        for info in sorted(new, key=cmp_to_key(orderFiles)):
             fname = "%s/%s" % (FILEREPO, info["path"])
             finfo = "%s.dqminfo" % fname
             fsize = os.lstat(fname)[ST_SIZE]
@@ -149,7 +150,7 @@ while True:
                 (dname, filepart) = fname.rsplit("/", 1)
                 (fd, tmp) = mkstemp(dir=dname)
                 del dqminfo["infofile"]
-                os.write(fd, "%s\n" % dqminfo)
+                os.write(fd, f"{dqminfo}\n".encode())
                 os.close(fd)
                 os.chmod(tmp, 0o666 & ~myumask)
                 os.remove(finfo)
@@ -163,7 +164,7 @@ while True:
             zfinfo = info["zinfofile"]
             (dname, filepart) = zippath.rsplit("/", 1)
             (fd, tmp) = mkstemp(dir=dname)
-            os.write(fd, "%s\n" % info["zinfo"])
+            os.write(fd, f'{info["zinfo"]}\n'.encode())
             os.close(fd)
             os.chmod(tmp, 0o666 & ~myumask)
             if os.path.exists(zfinfo):

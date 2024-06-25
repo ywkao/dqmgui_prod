@@ -143,7 +143,7 @@ while True:
                 finfo["mergedto"] = info["info"]["path"]
                 (dname, filepart) = fname.rsplit("/", 1)
                 (fd, tmp) = mkstemp(dir=dname)
-                os.write(fd, "%s\n" % finfo)
+                os.write(fd, f"{finfo}\n".encode())
                 os.close(fd)
                 os.chmod(tmp, 0o666 & ~myumask)
                 os.remove("%s.dqminfo" % fname)
@@ -154,7 +154,7 @@ while True:
             info["mergedfrom"] = info["files"]
             (dname, filepart) = path.rsplit("/", 1)
             (fd, tmp) = mkstemp(dir=dname)
-            os.write(fd, "%s\n" % info["info"])
+            os.write(fd, f"{info['info']}\n".encode())
             os.close(fd)
             os.chmod(tmp, 0o666 & ~myumask)
             os.rename(tmp, minfo)

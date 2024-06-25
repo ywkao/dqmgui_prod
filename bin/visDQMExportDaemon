@@ -163,7 +163,7 @@ class Exporter(Thread):
                 finfo = "%s/%s.dqminfo" % (EXPORTDIR, self._sample.streamFile)
                 try:
                     (fd, tmp) = mkstemp(dir=EXPORTDIR)
-                    os.write(fd, str(self._sample.toInfo()))
+                    os.write(fd, str(self._sample.toInfo()).encode())
                     os.close(fd)
                     os.rename(tmp, finfo)
                     for n in NEXT:
