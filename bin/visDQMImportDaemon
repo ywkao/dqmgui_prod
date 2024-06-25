@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, os.path, time, sys, argparse, subprocess, functools
+import os, os.path, time, sys, argparse, subprocess
 from subprocess import Popen, PIPE
 from traceback import print_exc
 from Monitoring.Core.Utils.Common import logme
@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from glob import glob
 from fcntl import lockf, LOCK_EX, LOCK_UN
 from socket import getfqdn
+from functools import cmp_to_key
 
 parser = argparse.ArgumentParser(
     description="Agent that imports root files "
@@ -399,7 +400,7 @@ while True:
         # Process the files in registration order.
         nfiles = 0
         existing = None
-        for info in sorted(new, key=functools.cmp_to_key(orderFiles)):
+        for info in sorted(new, key=cmp_to_key(orderFiles)):
             fname = "%s/%s" % (args.FILEREPO, info["path"])
             finfo = "%s.dqminfo" % fname
 

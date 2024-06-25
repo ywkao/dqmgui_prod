@@ -5,7 +5,7 @@ from traceback import print_exc
 from Monitoring.Core.Utils.Common import logme
 from urllib import request
 from fcntl import lockf, LOCK_EX, LOCK_UN
-
+from functools import cmp_to_key
 
 # --------------------------------------------------------------------
 # Command line parameters
@@ -235,9 +235,9 @@ while True:
                 return (a > b) - (a < b)
 
             runDS.setdefault(sample["type"], {})
-            for tp in sorted(sample["items"], key=lambda x, y: cmp(x["run"], y["run"]))[
-                :-1
-            ]:
+            for tp in sorted(
+                sample["items"], key=cmp_to_key(lambda x, y: cmp(x["run"], y["run"]))
+            )[:-1]:
                 newSample = (
                     runDS[tp["type"]]
                     .setdefault(tp["dataset"], {})

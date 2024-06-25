@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-import os, os.path, time, sys, re, hashlib, functools
+import os, os.path, time, sys, re, hashlib
 import logging
 from traceback import print_exc
 from Monitoring.Core.Utils.Common import logme
 from tempfile import mkstemp
 from stat import *
 from Monitoring.DQM import visDQMUtils
-
+from functools import cmp_to_key
 
 DROPBOX = sys.argv[1]  # Directory where we receive input ("drop box").
 FILEREPO = sys.argv[2]  # Final file repository of original DQM files.
@@ -466,7 +466,7 @@ while True:
     try:
         # Find new complete files. Compute repository destination for
         # each file. Reversion files where an older one already exists.
-        for info in sorted(findNewFiles(), key=functools.cmp_to_key(orderFiles)):
+        for info in sorted(findNewFiles(), key=cmp_to_key(orderFiles)):
             logme("receiving %s" % info["import"])
             finaliseOneFile(info)
 
