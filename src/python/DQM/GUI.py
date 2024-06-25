@@ -643,7 +643,6 @@ class DQMOverlaySource(Accelerator.DQMOverlaySource):
                         labels[i],
                     )
                 )
-        print(final, options)
         assert len(labels) == len(objs)
         a = self._plot(final, options)
         return (a[0], bytes(a[1]))
