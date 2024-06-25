@@ -979,7 +979,7 @@ class PieChart(LegendChart):
                 {
                     "coords": [
                         self._map[name][2 * i : (2 * i) + 1]
-                        for i in range(len(self._map[name]) / 2)
+                        for i in range(int(len(self._map[name]) / 2))
                     ],
                     "title": name,
                     "value": value,
@@ -1015,7 +1015,7 @@ class CumulativeTimeSeriesChart(LegendChart):
             self._axisFormat = "%Y"
             spanFormat = "%Y"
         else:
-            raise "Bad time series span"
+            raise Exception("Bad time series span")
 
         self.title = "%s\n%d %ss from %s to %s UTC" % (
             self.get("title", ""),
@@ -1105,7 +1105,7 @@ class CumulativeTimeSeriesChart(LegendChart):
             p = map_patches[k]
             maparea = []
 
-            def reduce_verts(verts):
+            def reduce_verts(verts: list) -> list:
                 if len(verts) >= 4:
                     if not (
                         verts[0][0] == verts[-1][0] and verts[0][1] == verts[-1][1]
@@ -1124,7 +1124,7 @@ class CumulativeTimeSeriesChart(LegendChart):
             # There is only ever a single patch here
             # verts = reduce_verts(p.get_transform().transform(p.get_verts()))
             verts = reduce_verts(p.get_transform().transform(p.get_paths()[0].vertices))
-            if len(verts) > 0:
+            if verts and len(verts) > 0:
                 for v in verts:
                     maparea.extend((v[0], float(self.get("height")) - v[1]))
                 self._map[k] = maparea
@@ -1190,7 +1190,7 @@ class CumulativeTimeSeriesChart(LegendChart):
                 {
                     "coords": [
                         self._map[name][2 * i : (2 * i) + 1]
-                        for i in range(len(self._map[name]) / 2)
+                        for i in range(int(len(self._map[name]) / 2))
                     ],
                     "title": name,
                     "value": value,
@@ -1228,7 +1228,7 @@ class TimeSeriesBarChart(LegendChart):
             self._axisFormat = "%Y"
             spanFormat = "%Y"
         else:
-            raise "Bad time series span"
+            raise Exception("Bad time series span")
 
         self.title = "%s\n%d %ss from %s to %s UTC" % (
             self.get("title", ""),
