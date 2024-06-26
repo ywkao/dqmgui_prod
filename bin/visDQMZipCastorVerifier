@@ -57,12 +57,11 @@ def runme(cmd, *args, **keys):
 
 
 def sendmail(body="Hello from visDQMZipCastorVerifier"):
-    # TODO: encode() when Offline DQMGUI updates to python3
     scall = Popen("%s -t" % SENDMAIL, shell=True, stdin=PIPE)
-    scall.stdin.write("To: %s\n" % EMAIL)
-    scall.stdin.write("Subject: Problem verifying file transfer to EOS\n")
-    scall.stdin.write("\n")  # blank line separating headers from body
-    scall.stdin.write("%s\n" % body)
+    scall.stdin.write(f"To: {EMAIL}\n".encode())
+    scall.stdin.write("Subject: Problem verifying file transfer to EOS\n".encode())
+    scall.stdin.write("\n".encode())  # blank line separating headers from body
+    scall.stdin.write(f"{body}\n".encode())
     scall.stdin.close()
     rc = scall.wait()
     if rc != 0:
