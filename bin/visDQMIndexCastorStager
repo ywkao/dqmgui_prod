@@ -293,15 +293,16 @@ def executeCommand(command):
 # Alert email addresses given as parameter about a failure of the process.
 def alertBySendingEmail(errorText):
     process = Popen("/usr/sbin/sendmail -t", shell=True, stdin=PIPE)
-    # TODO: encode() the strings for python3, when Offline GUI upgrades
-    process.stdin.write("To: %s\n" % args.EMAIL)
-    process.stdin.write("Subject: Problem sending DQM GUI index backup to EOS\n")
-    process.stdin.write("\n")  # blank line separating headers from body
-    process.stdin.write("Problem sending DQM GUI index backup to EOS\n")
-    process.stdin.write("Hostname: %s\n" % gethostname())
-    process.stdin.write("Index: %s\n" % args.INDEX)
-    process.stdin.write("%s\n" % errorText)
-    process.stdin.write("Please check logs!\n")
+    process.stdin.write(f"To: {args.EMAIL}\n".encode())
+    process.stdin.write(
+        "Subject: Problem sending DQM GUI index backup to EOS\n".encode()
+    )
+    process.stdin.write("\n".encode())  # blank line separating headers from body
+    process.stdin.write("Problem sending DQM GUI index backup to EOS\n".encode())
+    process.stdin.write(f"Hostname: {gethostname()}\n".encode())
+    process.stdin.write(f"Index: {args.INDEX}\n".encode())
+    process.stdin.write(f"{errorText}\n".encode())
+    process.stdin.write("Please check logs!\n".encode())
     process.stdin.close()
     returncode = process.wait()
     if returncode != 0:

@@ -46,15 +46,16 @@ check_index_limits_and_send_email() {
         tree_current_size=$(grep "${_tree_types[$i]}" "${TMP_CATALOGUE_FILE}_${FLAVOR}" | wc -l)
         tree_limit=$(grep -oE "${_tree_types_limit_name[$i]}[[:space:]]+[0-9]+" "$visdqmindex_header_file" | awk '{print $2}')
         percent_full=$(bc -l <<<"($tree_current_size/$tree_limit)*100")
-        echo "Found $tree_current_size ${_tree_types[$i]} in the catalogue. Limit is $tree_limit ($(printf '%.2f' $percent_full)%)"
+        echo "Found $tree_current_size ${_tree_types[$i]} in the catalogue. Limit is $tree_limit ($(printf '%.2f' $percent_full)% full)"
         # Check if alarm threshold is exceeded
         threshold=$(printf '%.0f' $(bc <<<"$ALERT_THRESHOLD * $tree_limit"))
         if [ $tree_current_size -gt $threshold ]; then
-            msg=$(printf "%s" "${msg}There are $tree_current_size ${_tree_types[$i]} in the index, which is above the $threshold threshold!\n")
+            msg=$(printf "%s" "${msg}WARNING: DQMGUI's index tree ${_tree_types[$i]} has $tree_current_size entries out of the maximum ${tree_limit} ($(printf '%.2f' $percent_full)% full))\n")
         fi
     done
     if [ -n "$msg" ]; then
-        printf "$msg" | mail -s "visDQMIndexMonitoring on $(hostname)" "$EMAIL_ADDRESS_TO_NOTIFY"
+        echo "Sending email to $EMAIL_ADDRESS_TO_NOTIFY"
+        printf "$msg" | mail -s "visDQMIndexMonitoring on $(hostname) (${FLAVOR})" "$EMAIL_ADDRESS_TO_NOTIFY"
     fi
 }
 
@@ -105,3 +106,4 @@ for step in "${steps[@]}"; do
         echo "Skipping step: $step"
     fi
 done
+echo "Done!"
