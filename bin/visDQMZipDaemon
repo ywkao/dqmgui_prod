@@ -106,8 +106,9 @@ while True:
                     elif os.path.exists(zinfopath):
                         serial += 1
                         continue
-                else:
-                    zips[zippath] = {"size": 0, "files": []}
+                    else:
+                        zips[zippath] = {"size": 0, "files": []}
+
                 zips[zippath]["zinfo"] = zinfo
                 zips[zippath]["zinfofile"] = zinfopath
                 zipsize = zips[zippath]["size"]
