@@ -10,8 +10,8 @@
 // Define the sizes to be used for the StringAtomTrees
 
 #define OBJECTNAMES 5000000
-#define PATHNAMES 1000000
-#define DATASETNAMES 100000
+#define PATHNAMES 1500000
+#define DATASETNAMES 200000
 #define CMSSWNAMES 10000
 #define STREAMERS 100
 
