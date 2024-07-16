@@ -5,6 +5,7 @@ import time
 import sys
 import pickle
 import logging
+from copy import deepcopy
 from Monitoring.Core.Utils.Common import logme
 from glob import glob
 from math import sqrt
@@ -200,6 +201,11 @@ try:
     #
     # Report back to the operator if we have checked the file RETRIES
     # times and the status is unchanged.
+    #
+    # NOTE: This script was written for Python3 and, during the loop, items that were not new were
+    # removed from the new dict using del. This is not supported in Python3,
+    # so we create a copy of the dictionary, and use the copy in the next loop, instead.
+    new_backup = deepcopy(new)
     for f, info in new.items():
         if not info["process"]:
             continue
@@ -223,7 +229,7 @@ try:
             # because it is an internal value for the agent and there is
             # no need to save it to the zinfo file.
             info["vtime"] = now
-            del info["process"]
+            del new_backup[f]["process"]
             zinfopath = "%s/%s.zinfo" % (ZIPREPO, info["zpath"])
             (dname, filepart) = zinfopath.rsplit("/", 1)
             (fd, tmp) = mkstemp(dir=dname)
@@ -250,7 +256,7 @@ try:
             # Clear out drop box and new
             if os.path.isfile(f):
                 os.remove(f)
-            del new[f]
+            del new_backup[f]
 
         except AssertionError as e:
             info["process"] = False
@@ -258,6 +264,7 @@ try:
             WARNINGS[msg] = WARNINGS.setdefault(msg, 0) + 1
             logme(msg)
             continue
+    new = deepcopy(new_backup)
 
 # If anything bad happened, barf but keep going.
 except KeyboardInterrupt:
