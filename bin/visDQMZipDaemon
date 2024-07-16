@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
-import os, os.path, time, sys
+import os
+import os.path
+import time
+import sys
 from traceback import print_exc
 from Monitoring.Core.Utils.Common import logme
 from tempfile import mkstemp
 from glob import glob
-from stat import *
+from stat import ST_SIZE
 from functools import cmp_to_key
 
 
@@ -54,7 +57,7 @@ while True:
             try:
                 with open(path) as _f:
                     info = eval(_f.read())
-            except:
+            except Exception:
                 continue
 
             info["infofile"] = path
@@ -86,7 +89,7 @@ while True:
                     try:
                         with open(zinfopath) as _f:
                             zinfo = eval(_f.read())
-                    except:
+                    except Exception:
                         serial += 1
                         continue
 

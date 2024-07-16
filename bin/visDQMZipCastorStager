@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
-import os, time, sys, re, pickle
+import os
+import time
+import sys
+import re
+import pickle
+import logging
+from copy import deepcopy
 from subprocess import Popen, PIPE
 from traceback import print_exc
 from tempfile import mkstemp
@@ -77,8 +83,12 @@ def load_new_dictionary():
             # Otherwise it would be sabotage anyway and there's no way to counter it.
             logme("It was loaded succesfully and contains %s entries." % len(new))
             return new
-        except:
-            logme("Couldn't load the pickle file. %s" % sys.exc_info()[0])
+        except Exception as e:
+            logme(
+                "Couldn't load the pickle file. %s. %s" % sys.exc_info()[0],
+                repr(e),
+                level=logging.INFO,
+            )
             logme("Started with a new empty dictionary.")
             return {}
     else:
@@ -100,8 +110,11 @@ def persist_new_dictionary(new):
             "Successfully dumped status of the 'new' dictionary with %s entries "
             "in pickle file at %s." % (len(new), pickle_file)
         )
-    except:
-        logme("Couldn't dump the pickle file to %s. %s" % (pickle_file, sys.exc_info()))
+    except Exception as e:
+        logme(
+            "Couldn't dump the pickle file to %s. %s" % (pickle_file, repr(e)),
+            level=logging.ERROR,
+        )
 
 
 def get_local_file_size(file_full_path):
@@ -109,7 +122,9 @@ def get_local_file_size(file_full_path):
         return os.stat(file_full_path).st_size
     else:
         logme(
-            "ERROR: Trying to get size of %s, but the file is missing.", file_full_path
+            "ERROR: Trying to get size of %s, but the file is missing.",
+            file_full_path,
+            level=logging.ERROR,
         )
         return 0
 
@@ -125,10 +140,11 @@ def get_castor_file_size(file_full_path):
             m = CASTOR_SIZE_RE.match(line)
             if m:
                 result = int(m.group(1))
-    except:
+    except Exception as e:
         logme(
             "Couldn't get castor file size for file %s.\n%s"
-            % (file_full_path, sys.exc_info())
+            % (file_full_path, repr(e)),
+            level=logging.ERROR,
         )
     return result
 
@@ -143,10 +159,11 @@ def get_castor_file_write_time(file_full_path):
     try:
         mtime = os.stat(file_full_path).st_mtime
         result = int(mtime)
-    except:
+    except Exception as e:
         logme(
             "Couldn't get castor write time for file %s. Using current time "
-            "instead.\n%s" % (file_full_path, sys.exc_info())
+            "instead.\n%s" % (file_full_path, repr(e)),
+            level=logging.ERROR,
         )
     return result
 
@@ -186,7 +203,7 @@ try:
             try:
                 with open(zf) as _f:
                     info = eval(_f.read())
-            except:
+            except Exception:
                 continue
 
             new.setdefault(zf, {}).update(info)
@@ -204,6 +221,11 @@ try:
     # If the file is in CASTOR but we can not determine its status,
     # then mark it by setting the "process" field to False so that no
     # copy is attempted for the zip file.
+    #
+    # NOTE: This script was written for Python3 and, during the loop, items that were not new were
+    # removed from the new dict using del. This is not supported in Python3,
+    # so we create a copy of the dictionary, and use the copy in the next loop, instead.
+    new_backup = deepcopy(new)
     for f, info in new.items():
         file_full_castor_path = "%s/%s" % (CASTORREPO, info["zpath"])
         file_full_local_path = "%s/%s" % (ZIPREPO, info["zpath"])
@@ -221,6 +243,7 @@ try:
             logme(
                 "ERROR: File: %s already exists in CASTOR but size" " does not match",
                 info["zpath"],
+                level=logging.ERROR,
             )
             os.rename(f, "%s.exists" % f)
         # Option2: The sizes are the same: Mark it "bad" if no stime info
@@ -230,14 +253,22 @@ try:
                 if os.path.isfile(f):
                     os.remove(f)
                 else:
-                    logme("ERROR: Trying to remove %s, but the file isn't there", f)
+                    logme(
+                        "ERROR: Trying to remove %s, but the file isn't there",
+                        f,
+                        level=logging.ERROR,
+                    )
             else:
                 if os.path.isfile(f):
                     os.rename(f, "%s.bad" % f)
                 else:
-                    logme("ERROR: Trying to rename %s, but the file isn't there", f)
+                    logme(
+                        "ERROR: Trying to rename %s, but the file isn't there",
+                        f,
+                        level=logging.ERROR,
+                    )
 
-        del new[f]
+        del new_backup[f]
 
     # Process the "new" directory and copy the files to CASTOR.
     # 1. We verify that the file is marked for processing and attempt
@@ -253,6 +284,7 @@ try:
     # bad by appending a '.bad' extension to the file name. This will
     # prevent the agent from picking it up again and then, the
     # operator can solve the conflict by hand.
+    new = deepcopy(new_backup)
     for f, info in new.items():
         if not info["process"]:
             continue
@@ -276,7 +308,7 @@ try:
             # Process is an internal value for the script and there is no
             # need to save it to the zinfo file
             info["stime"] = get_castor_file_write_time(cname)
-            del info["process"]
+            del new_backup[f]["process"]
             zinfopath = "%s/%s.zinfo" % (ZIPREPO, info["zpath"])
             (dname, filepart) = zinfopath.rsplit("/", 1)
             (fd, tmp) = mkstemp(dir=dname)
@@ -303,9 +335,9 @@ try:
 
             # Clear out drop box and remove entry from new directory
             os.remove(f)
-            del new[f]
+            del new_backup[f]
 
-        except AssertionError as e:
+        except AssertionError:
             # In the past we also did a stager_rm here, but after a talk with the
             # Castor people, they explained that this really makes no sense at
             # all, so we removed it. nsrm should be sufficient.
@@ -313,15 +345,15 @@ try:
             info["process"] = False
             if info["tries"] >= MAXTRIES:
                 os.rename(f, "%s.bad" % f)
-                del new[f]
+                del new_backup[f]
                 continue
-
+    new = deepcopy(new_backup)
 # If anything bad happened, barf but keep going.
-except KeyboardInterrupt as e:
+except KeyboardInterrupt:
     sys.exit(0)
 
 except Exception as e:
-    logme("ERROR: %s", e)
+    logme("ERROR: %s", e, level=logging.ERROR)
     print_exc()
 
 finally:
