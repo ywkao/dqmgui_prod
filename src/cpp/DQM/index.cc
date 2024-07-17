@@ -475,6 +475,7 @@ static MEClass classifyMonitorElement(DQMStore & /* store */,
   case MonitorElement::DQM_KIND_TH2F:
   case MonitorElement::DQM_KIND_TH2S:
   case MonitorElement::DQM_KIND_TH2D:
+  case MonitorElement::DQM_KIND_TH2Poly:
   case MonitorElement::DQM_KIND_TH2I:
   case MonitorElement::DQM_KIND_TH3F:
   case MonitorElement::DQM_KIND_TPROFILE:
@@ -1033,6 +1034,7 @@ static void extend(VisDQMIndex &ix, VisDQMIndex::Sample &s, uint64_t nsample,
             case MonitorElement::DQM_KIND_TH2F:
             case MonitorElement::DQM_KIND_TH2S:
             case MonitorElement::DQM_KIND_TH2D:
+            case MonitorElement::DQM_KIND_TH2Poly:
             case MonitorElement::DQM_KIND_TH2I:
             case MonitorElement::DQM_KIND_TH3F:
             case MonitorElement::DQM_KIND_TPROFILE:
@@ -1234,6 +1236,7 @@ static void readFileStream(FileInfo &fi, std::string &streamerinfo,
     case MonitorElement::DQM_KIND_TH2S:
     case MonitorElement::DQM_KIND_TH2I:
     case MonitorElement::DQM_KIND_TH2D:
+    case MonitorElement::DQM_KIND_TH2Poly:
     case MonitorElement::DQM_KIND_TH3F:
     case MonitorElement::DQM_KIND_TPROFILE:
     case MonitorElement::DQM_KIND_TPROFILE2D:
@@ -1349,6 +1352,7 @@ static void readFileStreamProtocolBuffer(
     case MonitorElement::DQM_KIND_TH2S:
     case MonitorElement::DQM_KIND_TH2I:
     case MonitorElement::DQM_KIND_TH2D:
+    case MonitorElement::DQM_KIND_TH2Poly:
     case MonitorElement::DQM_KIND_TH3F:
     case MonitorElement::DQM_KIND_TPROFILE:
     case MonitorElement::DQM_KIND_TPROFILE2D:
