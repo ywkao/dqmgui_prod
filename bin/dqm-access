@@ -3,8 +3,12 @@
 from Monitoring.Core.HTTP import RequestManager
 from Monitoring.Core.X509 import SSLOptions
 from optparse import OptionParser
-from time import strptime, time
-import sys, re, json, pycurl, urllib
+from time import time
+import sys
+import re
+import json
+import pycurl
+from urllib import parse
 
 DIR = 0
 FILE = 1
@@ -179,7 +183,7 @@ def fetch_tstreamerinfo(options, dataset):
 # -------------------------------------------------------------------------------
 def request_init(c, options, sample, path, filterspec):
     sample.update(path=path)
-    c.url = options.server + urllib.quote(url_content % sample)
+    c.url = options.server + parse.quote(url_content % sample)
     if options.fetch_root:
         c.url += "?rootcontent=1"
     c.setopt(pycurl.URL, c.url)
