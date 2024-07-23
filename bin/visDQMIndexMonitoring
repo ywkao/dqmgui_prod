@@ -16,41 +16,46 @@ INSTALLATION_DIR=/data/srv
 TMP_CATALOGUE_FILE=/tmp/dqmgui_catalogue
 EMAIL_ADDRESS_TO_NOTIFY=cms-dqm-coreTeam@cern.ch
 # Alarm threshold value [0.0, 1.0].
-# An alarm is triggered if any of the tree sizes exceed 80% of their capacity.
-ALERT_THRESHOLD="0.8"
+# An alarm is triggered if any of the tree sizes exceed 90% of their capacity.
+ALERT_THRESHOLD="0.9"
 
 preliminary_checks() {
     if [ ! -d "$INSTALLATION_DIR" ] || [ ! -d "$INSTALLATION_DIR/state/dqmgui/$FLAVOR/ix128" ]; then
         echo "Could not find $FLAVOR DQMGUI in $INSTALLATION_DIR"
         exit 1
     fi
-    # Needed to get the index limits
-    if [ ! -f "$INSTALLATION_DIR/current/apps/dqmgui/128/src/cpp/DQM/VisDQMIndex.h" ]; then
-        echo "Could not find required \"VisDQMIndex.h\" file in $INSTALLATION_DIR"
-        exit 1
-    fi
+}
+
+# Activate the DQMGUI environment with the required env variables
+activate_env() {
+    source $INSTALLATION_DIR/current/apps/dqmgui/128/etc/profile.d/env.sh
 }
 
 # Sources the env.sh file needed for activating the DQMGUI environment,
 # then dumps the Index' catalogue to the TMP_CATALOGUE_FILE
 dump_catalogue() {
-    source $INSTALLATION_DIR/current/apps/dqmgui/128/etc/profile.d/env.sh
     visDQMIndex dump $INSTALLATION_DIR/state/dqmgui/$FLAVOR/ix128 catalogue >"${TMP_CATALOGUE_FILE}_${FLAVOR}"
 }
 
+get_index_capacity() {
+    for tree_name_and_size in $(visDQMIndex get_capacity); do
+        tree_name=$(echo $tree_name_and_size | cut -d',' -f1)
+        tree_limit=$(echo $tree_name_and_size | cut -d',' -f2)
+        tree_limits[$tree_name]=$tree_limit
+    done
+}
+
 check_index_limits_and_send_email() {
-    visdqmindex_header_file="$INSTALLATION_DIR/current/apps/dqmgui/128/src/cpp/DQM/VisDQMIndex.h"
     msg=
     # Run over all tree types
-    for i in $(seq 0 $((${#_tree_types[@]} - 1))); do
-        tree_current_size=$(grep "${_tree_types[$i]}" "${TMP_CATALOGUE_FILE}_${FLAVOR}" | wc -l)
-        tree_limit=$(grep -oE "${_tree_types_limit_name[$i]}[[:space:]]+[0-9]+" "$visdqmindex_header_file" | awk '{print $2}')
-        percent_full=$(bc -l <<<"($tree_current_size/$tree_limit)*100")
-        echo "Found $tree_current_size ${_tree_types[$i]} in the catalogue. Limit is $tree_limit ($(printf '%.2f' $percent_full)% full)"
+    for tree_name in "${!tree_limits[@]}"; do
+        tree_current_size=$(grep "$tree_name" "${TMP_CATALOGUE_FILE}_${FLAVOR}" | wc -l)
+        percent_full=$(bc -l <<<"($tree_current_size/${tree_limits[$tree_name]})*100")
+        echo "Found $tree_current_size $tree_name in the catalogue. Limit is ${tree_limits[$tree_name]} ($(printf '%.2f' $percent_full)% full)"
         # Check if alarm threshold is exceeded
-        threshold=$(printf '%.0f' $(bc <<<"$ALERT_THRESHOLD * $tree_limit"))
+        threshold=$(printf '%.0f' $(bc <<<"$ALERT_THRESHOLD * ${tree_limits[$tree_name]}"))
         if [ $tree_current_size -gt $threshold ]; then
-            msg=$(printf "%s" "${msg}WARNING: DQMGUI's index tree ${_tree_types[$i]} has $tree_current_size entries out of the maximum ${tree_limit} ($(printf '%.2f' $percent_full)%% full)\n")
+            msg=$(printf "%s" "${msg}WARNING: DQMGUI's index tree $tree_name has $tree_current_size entries out of the maximum ${tree_limit} ($(printf '%.2f' $percent_full)%% full)\n")
         fi
     done
     if [ -n "$msg" ]; then
@@ -64,9 +69,11 @@ cleanup() {
 }
 
 ### Main script
-
+declare -A tree_limits=()
 declare -a steps=(
     preliminary_checks
+    activate_env
+    get_index_capacity
     dump_catalogue
     check_index_limits_and_send_email
     cleanup
@@ -88,11 +95,6 @@ for ARGUMENT in "$@"; do
     VALUE="${ARGUMENT:$KEY_LENGTH+1}"
     eval "$KEY=$VALUE"
 done
-
-# The different types of trees in the index which you get by running visDQMIndex dump catalogue
-_tree_types=("CMSSW-VERSION" "DATASET-NAME" "OBJECT-NAME" "SOURCE-FILE")
-# The definition names of the limits, in VisDQMIndex.h, in one-to-one mapping to the _tree_types
-_tree_types_limit_name=("CMSSWNAMES" "DATASETNAMES" "OBJECTNAMES" "PATHNAMES")
 
 # For each step, check if the appropriate flag is enabled.
 for step in "${steps[@]}"; do
