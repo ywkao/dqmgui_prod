@@ -14,15 +14,18 @@ be set correctly for authentication.
 
 from Monitoring.Core.HTTP import RequestManager
 from Monitoring.Core.X509 import SSLOptions
-import os, os.path, sys, re, pycurl, urllib
+import os
+import os.path
+import sys
+import re
+import pycurl
+from urllib.parse import quote, urlparse
 from time import time, strptime, sleep
 from optparse import OptionParser
-from urllib import parse
 from calendar import timegm
 from Monitoring.Core.Utils.Common import logme
 from traceback import print_exc
 from tempfile import mkstemp
-from stat import *
 
 
 # Directory where we receive input ("drop box"). Not used.
@@ -86,7 +89,7 @@ def need_to_copy(path, size, date):
         info = os.stat(path)
         if int(info.st_mtime) == date and info.st_size == size:
             return False
-    except:
+    except Exception:
         if os.path.exists("%s.dqminfo" % path):
             return False
 
@@ -103,14 +106,12 @@ def handle_init(c):
 def request_init(c, options, kind, path, size, date):
     """`RequestManager` callback to initialise directory contents request."""
     # Set the download URL.
-    assert c.temp_file == None
-    assert c.temp_path == None
-    assert c.local_path == None
+    assert c.temp_file is None
+    assert c.temp_path is None
+    assert c.local_path is None
     c.setopt(
         pycurl.URL,
-        options.server
-        + urllib.quote(path)
-        + ((kind == DIR and path != "/" and "/") or ""),
+        options.server + quote(path) + ((kind == DIR and path != "/" and "/") or ""),
     )
 
     # If this is file download, prepare temporary destination file
@@ -139,17 +140,17 @@ def cleanup(c):
     if c.temp_file:
         try:
             c.temp_file.close()
-        except:
+        except Exception:
             pass
     if c.temp_path:
         try:
             os.remove(c.temp_path)
-        except:
+        except Exception:
             pass
     if c.local_path:
         try:
             os.remove(c.local_path)
-        except:
+        except Exception:
             pass
     c.temp_file = None
     c.temp_path = None
@@ -226,11 +227,11 @@ def process_task(c):
 
     # If it's a DIR, scan directory contents and maybe fetch files.
     elif kind == DIR:
-        assert c.temp_file == None, "Unexpected temporary file for a directory"
-        assert c.temp_path == None, "Unexpected temporary path for a directory"
-        assert c.local_path == None, "Unexpected local path for a directory"
-        assert size == None, "Unexpected size for a directory"
-        assert date == None, "Unexpected date for a directory"
+        assert c.temp_file is None, "Unexpected temporary file for a directory"
+        assert c.temp_path is None, "Unexpected temporary path for a directory"
+        assert c.local_path is None, "Unexpected local path for a directory"
+        assert size is None, "Unexpected size for a directory"
+        assert date is None, "Unexpected date for a directory"
         items = re.findall(
             r"<tr><td><a href='(.*?)'>(.*?)</a></td><td>(\d+|&nbsp;|-)</td>"
             r"<td>(&nbsp;|\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d UTC)</td>",
@@ -303,7 +304,7 @@ if not options.server:
     sys.exit(1)
 
 UMASK = myumask()
-ROOT_URL = parse.urlparse(options.server).path.rstrip("/")
+ROOT_URL = urlparse(options.server).path.rstrip("/")
 DROPBOX = args[0]
 FILEREPO = args[1]
 NEXT = args[2:]
@@ -343,7 +344,7 @@ while True:
         )
 
     # If anything bad happened, barf but keep going.
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         logme("INFO: exiting")
         map(cleanup, reqman.handles)
         sys.exit(0)

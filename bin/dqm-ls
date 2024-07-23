@@ -17,7 +17,9 @@ key rather than a proxy, it will prompt for the key password.
 
 from Monitoring.Core.HTTP import RequestManager
 from Monitoring.Core.X509 import SSLOptions
-import sys, re, pycurl, urllib
+import sys
+import re
+import pycurl
 from optparse import OptionParser
 from time import time, strptime
 from calendar import timegm
@@ -46,7 +48,7 @@ found = []
 def request_init(c, options, path):
     """`RequestManager` callback to initialise directory contents request."""
     c.setopt(
-        pycurl.URL, options.server + urllib.quote(path) + ((path != "/" and "/") or "")
+        pycurl.URL, options.server + parse.quote(path) + ((path != "/" and "/") or "")
     )
 
 
