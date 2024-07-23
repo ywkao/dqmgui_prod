@@ -57,16 +57,17 @@ using google::protobuf::io::StringOutputStream;
 // ----------------------------------------------------------------------
 /** Index task to perform. */
 enum TaskType {
-  TASK_CREATE,      //< Create and initialise a new index.
-  TASK_ADD,         //< Add data to an index.
-  TASK_REMOVE,      //< Remove data from the index.
-  TASK_MERGE,       //< Merge an index to another.
-  TASK_DUMP,        //< Dump the index contents.
-  TASK_STREAM,      //< Stream a sample from the index into an intermediate .dat
-                    //file.
-  TASK_STREAMPB,    //< Stream a sample from the index into an intermediate
-                    //ProtocolBuffer .pb file.
-  TASK_FIXSTREAMERS //< Add missing streamerinfo to oldest ones.
+  TASK_CREATE,   //< Create and initialise a new index.
+  TASK_ADD,      //< Add data to an index.
+  TASK_REMOVE,   //< Remove data from the index.
+  TASK_MERGE,    //< Merge an index to another.
+  TASK_DUMP,     //< Dump the index contents.
+  TASK_STREAM,   //< Stream a sample from the index into an intermediate .dat
+                 // file.
+  TASK_STREAMPB, //< Stream a sample from the index into an intermediate
+                 // ProtocolBuffer .pb file.
+  TASK_FIXSTREAMERS,  //< Add missing streamerinfo to oldest ones.
+  TASK_PRINT_CAPACITY //< Print just the capacities of each index tree
 };
 
 /** Things user can choose to dump out. */
@@ -74,7 +75,7 @@ enum DumpType {
   DUMP_CATALOGUE, //< Dump the master catalogue.
   DUMP_INFO,      //< Dump monitor element summary information.
   DUMP_DATA,      //< Dump monitor element serialised data.
-  DUMP_ALL        //< Dump everything.
+  DUMP_ALL,       //< Dump everything.
 };
 
 /** Classification of what to do with a monitor element. */
@@ -90,7 +91,7 @@ enum DataType {
   TYPE_DATA,            //< DQM data for real detector data.
   TYPE_RELVAL,          //< DQM data for release validation simulated data.
   TYPE_RELVAL_RUNDEPMC, //< DQM data for release validation RunDependent
-                        //simulated data.
+                        // simulated data.
   TYPE_MC,              //< DQM data for other simulated data.
   TYPE_RUNDEPMC         //< DQM data for Run Dependent simulated data.
 };
@@ -114,7 +115,7 @@ struct SampleInfo {
 /** Classification of input files to DQM samples. */
 struct FileInfo {
   Filename path; //< Path name of the input file (or File name of the root file
-                 //inside a zip archive).
+                 // inside a zip archive).
   Filename fullpath; //< File name of the zip archive and ROOT filename.
   Filename
       container; //< File name of the zip archive, if any, or of the root file.
@@ -2262,6 +2263,16 @@ static int mergeIndexes(const Filename &indexdir,
   return EXIT_SUCCESS;
 }
 
+// Print the current limits of the index, for each tree.
+static int printIndexCapacity() {
+  std::cout << "CMSSW-VERSION," << CMSSWNAMES << std::endl;
+  std::cout << "DATASET-NAME," << DATASETNAMES << std::endl;
+  std::cout << "OBJECT-NAME," << OBJECTNAMES << std::endl;
+  std::cout << "SOURCE-FILE," << PATHNAMES << std::endl;
+  std::cout << "STREAMER," << STREAMERS << std::endl;
+  return EXIT_SUCCESS;
+}
+
 /** Fix the streamerInfo in the index. By policy we overwrite only the
 latest streamer info present in the old index, since it is the one
 referring to the ROOT version bundled with the DQM GUI. We have no
@@ -3055,7 +3066,8 @@ static int showusage(void) {
       << app.name()
       << " [OPTIONS] streampb --sample SAMPLE-ID INDEX-DIRECTORY\n  "
       << app.name()
-      << " [OPTIONS] fixstreamers [--streamer STREAMER-ID] INDEX-DIRECTORY\n";
+      << " [OPTIONS] fixstreamers [--streamer STREAMER-ID] INDEX-DIRECTORY\n  "
+      << app.name() << " [OPTIONS] get_capacity\n";
   return EXIT_FAILURE;
 }
 
@@ -3087,7 +3099,7 @@ int main(int argc, char **argv) {
   int arg;
 
   // Check top-level arguments.
-  for (arg = 1; arg < argc; ++arg)
+  for (arg = 1; arg < argc; ++arg) {
     if (!strcmp(argv[arg], "--no-debug"))
       debug = 0;
     else if (!strcmp(argv[arg], "--debug") || !strcmp(argv[arg], "-d"))
@@ -3102,6 +3114,7 @@ int main(int argc, char **argv) {
       return showusage();
     } else
       break;
+  }
 
   // Check which task we should execute.
   if (arg < argc) {
@@ -3121,9 +3134,12 @@ int main(int argc, char **argv) {
       ++arg, task = TASK_STREAMPB;
     else if (!strcmp(argv[arg], "fixstreamers"))
       ++arg, task = TASK_FIXSTREAMERS;
+    else if (!strcmp(argv[arg], "get_capacity"))
+      ++arg, task = TASK_PRINT_CAPACITY;
     else {
       std::cerr << app.name() << ": unrecognised task parameter '" << argv[arg]
-                << "', expected one of create, add or remove\n";
+                << "', expected one of create, add, remove, merge, dump, "
+                   "stream, streamdb, fixstreamsers, get_capacity\n";
       return showusage();
     }
   } else {
@@ -3226,12 +3242,15 @@ int main(int argc, char **argv) {
     }
   }
 
-  // Next option should be the index directory.
-  if (arg < argc)
-    indexdir = argv[arg++];
-  else {
-    std::cerr << app.name() << ": not enough arguments\n";
-    return showusage();
+  // Next option should be the index directory, unless
+  // only the capacity is needed, which does not depend on it.
+  if (task != TASK_PRINT_CAPACITY) {
+    if (arg < argc)
+      indexdir = argv[arg++];
+    else {
+      std::cerr << app.name() << ": not enough arguments\n";
+      return showusage();
+    }
   }
 
   // Now check for remaining (non-option) task parameters.
@@ -3442,6 +3461,8 @@ int main(int argc, char **argv) {
       std::cerr << indexdir.name() << ": not a directory\n";
       return EXIT_FAILURE;
     }
+  } else if (task == TASK_PRINT_CAPACITY) {
+    // No extra arguments to parse
   } else {
     std::cerr << app.name() << ": internal error at line " << __LINE__ << '\n';
     return EXIT_FAILURE;
@@ -3465,6 +3486,8 @@ int main(int argc, char **argv) {
       return streamoutProtocolBuffer(indexdir, sampleid);
     else if (task == TASK_FIXSTREAMERS)
       return fixStreamerInfo(indexdir, streamerid);
+    else if (task == TASK_PRINT_CAPACITY)
+      return printIndexCapacity();
     else {
       std::cerr << app.name() << ": internal error, unknown task\n";
       return EXIT_FAILURE;
