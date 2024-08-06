@@ -23,7 +23,7 @@ import pycurl
 from optparse import OptionParser
 from time import time, strptime
 from calendar import timegm
-from urllib import parse
+from urllib.parse import quote, urlparse
 
 # Object types.
 DIR = 0
@@ -48,7 +48,7 @@ found = []
 def request_init(c, options, path):
     """`RequestManager` callback to initialise directory contents request."""
     c.setopt(
-        pycurl.URL, options.server + parse.quote(path) + ((path != "/" and "/") or "")
+        pycurl.URL, options.server + quote(path) + ((path != "/" and "/") or "")
     )
 
 
@@ -69,12 +69,12 @@ def parse_dir(c):
     If verbosity has been requested, also shows simple progress bar on the
     search progress, one dot for every ten directories retrieved."""
     options, path = c.task
-    root_url = parse.urlparse(options.server).path.rstrip("/")
+    root_url = urlparse(options.server).path.rstrip("/")
 
     items = re.findall(
         r"<tr><td><a href='(.*?)'>(.*?)</a></td><td>(\d+|&nbsp;|-)</td>"
         r"<td>(&nbsp;|\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d UTC)</td>",
-        c.buffer.getvalue(),
+        c.buffer.getvalue().decode(),
     )
 
     for path, name, size, date in items:

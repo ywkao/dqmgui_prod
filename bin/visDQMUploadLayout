@@ -3,8 +3,8 @@
 from Monitoring.Core.HTTP import RequestManager
 from Monitoring.Core.X509 import SSLOptions
 import sys, os, mimetypes
-from io import StringIO
-from stat import *
+from io import BytesIO
+# from stat import *
 
 IDENT = "visDQMUploadLayout DQMGUI/%s python/%s" % (
     os.getenv("DQMGUI_VERSION", "?"),
@@ -39,7 +39,7 @@ def encode(args, files):
         body += ("Content-Type: %s" % filetype(filename)).encode() + crlf
         with open(filename, "rb") as _f:
             body += crlf + _f.read() + crlf
-    body += "--" + boundary + "--".encode() + crlf + crlf
+    body += "--".encode() + boundary + "--".encode() + crlf + crlf
     return ("multipart/form-data; boundary=".encode() + boundary, body)
 
 
@@ -58,12 +58,12 @@ def req_init(c, url, files):
     headers.append("Content-type: %s" % type)
     headers.append("Content-length: %s" % str(len(body)))
     c.setopt(c.HTTPHEADER, headers)
-    body_IO = StringIO(body)
+    body_IO = BytesIO(body)
     c.setopt(c.READFUNCTION, body_IO.read)
 
 
 def req_done(c):
-    print(c.buffer.getvalue())
+    print(c.buffer.getvalue().decode())
 
 
 def req_error(c, task, errmsg, errno):
