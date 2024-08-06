@@ -235,7 +235,7 @@ def process_task(c):
         items = re.findall(
             r"<tr><td><a href='(.*?)'>(.*?)</a></td><td>(\d+|&nbsp;|-)</td>"
             r"<td>(&nbsp;|\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d UTC)</td>",
-            c.buffer.getvalue(),
+            c.buffer.getvalue().decode(),
         )
 
         for path, name, size, date in items:
