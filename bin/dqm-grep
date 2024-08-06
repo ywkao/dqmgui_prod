@@ -188,7 +188,7 @@ def find_matching_samples(options):
         sys.exit(1)
 
     def req_done(c):
-        all_samples["result"] = json.loads(c.buffer.getvalue())
+        all_samples["result"] = json.loads(c.buffer.getvalue().decode())
 
     reqman = RequestManager(
         ssl_opts=ssl_opts,
@@ -301,9 +301,9 @@ def process(c):
         sys.stdout.write(".")
         sys.stdout.flush()
         if nreq % 750 == 0:
-            print
+            print()
 
-    reply = c.buffer.getvalue()
+    reply = c.buffer.getvalue().decode()
     reply = re.sub(r'("value": ")"([A-Za-z0-9_]+")"', r"\1\2", reply)
     reply = re.sub(r'("(?:mean|rms|min|max)":) nan,', r'\1 "NaN",', reply)
     reply = json.loads(reply)
