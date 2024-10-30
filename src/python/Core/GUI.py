@@ -652,8 +652,8 @@ class Server:
                 severity=logging.WARNING,
             )
 
-        self._noResponseCaching()
-        return str(e)
+            self._noResponseCaching()
+            return str(e)
 
     # -----------------------------------------------------------------
     @expose
@@ -693,8 +693,8 @@ class Server:
                 severity=logging.WARNING,
             )
 
-        self._noResponseCaching()
-        return str(e)
+            self._noResponseCaching()
+            return str(e)
 
     # -----------------------------------------------------------------
     @expose
@@ -709,7 +709,7 @@ class Server:
                 for s in self.sources:
                     if getattr(s, "plothook", None) == args[0]:
                         (type, data) = s.plot(*args[1:], **kwargs)
-                        if type != None:
+                        if type is not None:
                             self._noResponseCaching()
                             response.headers["Content-Length"] = str(len(data))
                             response.headers["Content-Type"] = type
