@@ -2542,6 +2542,7 @@ static int dumpIndex(const Filename &indexdir, DumpType what, size_t sampleid) {
                 << (type == VisDQMIndex::SUMMARY_PROP_TYPE_TH2F ? ", TH2F" : "")
                 << (type == VisDQMIndex::SUMMARY_PROP_TYPE_TH2S ? ", TH2S" : "")
                 << (type == VisDQMIndex::SUMMARY_PROP_TYPE_TH2I ? ", TH2I" : "")
+                << (type == VisDQMIndex::SUMMARY_PROP_TYPE_TH2Poly ? ", TH2Poly" : "")
                 << (type == VisDQMIndex::SUMMARY_PROP_TYPE_TH3F ? ", TH3F" : "")
                 << (type == VisDQMIndex::SUMMARY_PROP_TYPE_TH3S ? ", TH3S" : "")
                 << (type == VisDQMIndex::SUMMARY_PROP_TYPE_TPROF ? ", TPROF"

@@ -114,7 +114,7 @@ class VisDQMCache;
       monitor element objects stored anywhere in the index.
 
     - Key #MASTER_TSTREAMERINFO, binary data: Serialised ROOT
-      TStreamerInfo objects for TH1F, TH1I, TH1S, TH2F, TH2S, TH2I, TH3F, TH3S,
+      TStreamerInfo objects for TH1F, TH1I, TH1S, TH2F, TH2S, TH2I, TH2Poly, TH3F, TH3S,
       TProfile and TProfile2D types.  The sample's streamer info
       should be used whenever reading in ROOT object data for the
       sample.  All data originating from a particular ROOT version
