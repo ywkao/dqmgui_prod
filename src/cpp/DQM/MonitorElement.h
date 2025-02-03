@@ -253,6 +253,7 @@ public:
   int getNbinsX(void) const;
   int getNbinsY(void) const;
   int getNbinsZ(void) const;
+  int getNcells() const;
   double getBinContent(int binx) const;
   double getBinContent(int binx, int biny) const;
   double getBinContent(int binx, int biny, int binz) const;
@@ -269,7 +270,9 @@ private:
 public:
   std::string getAxisTitle(int axis = 1) const;
   std::string getTitle(void) const;
-  // void addBin(TGraph *graph);
+  virtual void addBin(TGraph *graph);
+  virtual void addBin(int n, const double *x, const double *y);
+  virtual void addBin(double x1, double y1, double x2, double y2);
   void setBinContent(int binx, double content);
   void setBinContent(int binx, int biny, double content);
   void setBinContent(int binx, int biny, int binz, double content);

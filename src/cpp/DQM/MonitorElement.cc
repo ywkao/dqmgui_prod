@@ -759,6 +759,11 @@ MonitorElement::getNbinsZ(void) const
 { return accessRootObject(__PRETTY_FUNCTION__, 3)
     ->GetNbinsZ(); }
 
+int
+MonitorElement::getNcells() const
+{ return accessRootObject(access, __PRETTY_FUNCTION__, 1)
+    ->GetNcells(); }
+
 /// get content of bin (1-D)
 double
 MonitorElement::getBinContent(int binx) const
@@ -870,6 +875,30 @@ MonitorElement::getTitle(void) const
 // }
 
 /// set content of bin (1-D)
+
+// Add a polygonal bin to a TH2Poly histogram through TGraph
+void
+MonitorElement::addBin(TGraph *graph) {
+  update();
+  accessRootObject(access, __PRETTY_FUNCTION__, 2)
+    ->AddBin(graph);
+}
+
+// Add a polygonal bin to a TH2Poly histogram through arrays
+void
+MonitorElement::addBin(int n, const double *x, const double *y) {
+  update();
+  accessRootObject(access, __PRETTY_FUNCTION__, 2)
+    ->AddBin(n, x, y);
+}
+
+// Add a rectangular bin to a TH2Poly histogram
+void
+MonitorElement::addBin(double x1, double y1, double x2, double y2) {
+  accessRootObject(access, __PRETTY_FUNCTION__, 2)
+    ->AddBin(x1, y1, x2, y2);
+}
+
 void
 MonitorElement::setBinContent(int binx, double content)
 {
