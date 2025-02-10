@@ -1614,7 +1614,7 @@ void
 DQMStore::collate2DPoly(MonitorElement *me, TH2Poly *h, unsigned verbose)
 {
   if (checkBinningMatches(me,h,verbose))
-    me->getTH2Poly->Add(h, 1.);
+    me->getTH2Poly()->Add(h, 1.);
 }
 
 void
