@@ -23,14 +23,25 @@
 #include <unistd.h>
 
 #if __APPLE__
-#define MESSAGE_SIZE_LIMIT (1 * 1024 * 1024)
-#define SOCKET_BUF_SIZE (1 * 1024 * 1024)
+#define DEFAULT_MESSAGE_SIZE_LIMIT (1 * 1024 * 1024)
+#define DEFAULT_SOCKET_BUF_SIZE (1 * 1024 * 1024)
 #else
-#define MESSAGE_SIZE_LIMIT (32 * 1024 * 1024)
-#define SOCKET_BUF_SIZE (32 * 1024 * 1024)
+#define DEFAULT_MESSAGE_SIZE_LIMIT (32 * 1024 * 1024)
+#define DEFAULT_SOCKET_BUF_SIZE (32 * 1024 * 1024)
 #endif
-#define SOCKET_READ_SIZE (SOCKET_BUF_SIZE / 8)
-#define SOCKET_READ_GROWTH (SOCKET_BUF_SIZE)
+
+// Create configurable variables with macro defaults
+static int MESSAGE_SIZE_LIMIT = getenv("DQM_MESSAGE_SIZE_LIMIT") ?
+    atoi(getenv("DQM_MESSAGE_SIZE_LIMIT")) : DEFAULT_MESSAGE_SIZE_LIMIT;
+
+static int SOCKET_BUF_SIZE = getenv("DQM_SOCKET_BUF_SIZE") ?
+    atoi(getenv("DQM_SOCKET_BUF_SIZE")) : DEFAULT_SOCKET_BUF_SIZE;
+
+static int SOCKET_READ_SIZE = (getenv("DQM_SOCKET_BUF_SIZE") ?
+    atoi(getenv("DQM_SOCKET_BUF_SIZE")) : DEFAULT_SOCKET_BUF_SIZE) / 8;
+
+static int SOCKET_READ_GROWTH = getenv("DQM_SOCKET_BUF_SIZE") ?
+    atoi(getenv("DQM_SOCKET_BUF_SIZE")) : DEFAULT_SOCKET_BUF_SIZE;
 
 using namespace lat;
 
