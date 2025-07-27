@@ -26,8 +26,8 @@
 #define MESSAGE_SIZE_LIMIT (1 * 1024 * 1024)
 #define SOCKET_BUF_SIZE (1 * 1024 * 1024)
 #else
-#define MESSAGE_SIZE_LIMIT (300 * 1024 * 1024)
-#define SOCKET_BUF_SIZE (300 * 1024 * 1024)
+#define MESSAGE_SIZE_LIMIT (32 * 1024 * 1024)
+#define SOCKET_BUF_SIZE (32 * 1024 * 1024)
 #endif
 #define SOCKET_READ_SIZE (SOCKET_BUF_SIZE / 8)
 #define SOCKET_READ_GROWTH (SOCKET_BUF_SIZE)
@@ -785,6 +785,12 @@ bool DQMNet::onPeerData(IOSelectEvent *ev, Peer *p) {
       memcpy(&msglen, &data[0] + consumed, sizeof(msglen));
 
       if (msglen >= MESSAGE_SIZE_LIMIT) {
+        // Log the warning with more detail
+        log_warning("Large message detected: %d MB from peer %s (limit: %d MB)",
+                msglen/1024/1024,
+                peer_info,
+                MESSAGE_SIZE_LIMIT/1024/1024);
+
         losePeer("WARNING: excessively large message from ", p, ev);
         unlock();
         return true;
