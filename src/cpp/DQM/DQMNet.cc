@@ -31,16 +31,16 @@
 #endif
 
 // Create configurable variables with macro defaults
-static int MESSAGE_SIZE_LIMIT = getenv("DQM_MESSAGE_SIZE_LIMIT") ?
+static unsigned int MESSAGE_SIZE_LIMIT = getenv("DQM_MESSAGE_SIZE_LIMIT") ?
     atoi(getenv("DQM_MESSAGE_SIZE_LIMIT")) : DEFAULT_MESSAGE_SIZE_LIMIT;
 
-static int SOCKET_BUF_SIZE = getenv("DQM_SOCKET_BUF_SIZE") ?
+static unsigned int SOCKET_BUF_SIZE = getenv("DQM_SOCKET_BUF_SIZE") ?
     atoi(getenv("DQM_SOCKET_BUF_SIZE")) : DEFAULT_SOCKET_BUF_SIZE;
 
-static int SOCKET_READ_SIZE = (getenv("DQM_SOCKET_BUF_SIZE") ?
+static unsigned int SOCKET_READ_SIZE = (getenv("DQM_SOCKET_BUF_SIZE") ?
     atoi(getenv("DQM_SOCKET_BUF_SIZE")) : DEFAULT_SOCKET_BUF_SIZE) / 8;
 
-static int SOCKET_READ_GROWTH = getenv("DQM_SOCKET_BUF_SIZE") ?
+static unsigned int SOCKET_READ_GROWTH = getenv("DQM_SOCKET_BUF_SIZE") ?
     atoi(getenv("DQM_SOCKET_BUF_SIZE")) : DEFAULT_SOCKET_BUF_SIZE;
 
 using namespace lat;
@@ -797,12 +797,9 @@ bool DQMNet::onPeerData(IOSelectEvent *ev, Peer *p) {
 
       if (msglen >= MESSAGE_SIZE_LIMIT) {
         // Log the warning with more detail
-        log_warning("Large message detected: %d MB from peer %s (limit: %d MB)",
-                msglen/1024/1024,
-                peer_info,
-                MESSAGE_SIZE_LIMIT/1024/1024);
-
-        losePeer("WARNING: excessively large message from ", p, ev);
+        char msg[256];
+        snprintf(msg, sizeof(msg), "WARNING: excessively large message (%d MB / %d MB) from ", msglen/1024/1024, MESSAGE_SIZE_LIMIT/1024/1024);
+        losePeer(msg, p, ev);
         unlock();
         return true;
       }
