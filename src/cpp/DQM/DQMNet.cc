@@ -26,8 +26,8 @@
 #define DEFAULT_MESSAGE_SIZE_LIMIT (1 * 1024 * 1024)
 #define DEFAULT_SOCKET_BUF_SIZE (1 * 1024 * 1024)
 #else
-#define DEFAULT_MESSAGE_SIZE_LIMIT (32 * 1024 * 1024)
-#define DEFAULT_SOCKET_BUF_SIZE (32 * 1024 * 1024)
+#define DEFAULT_MESSAGE_SIZE_LIMIT (8 * 1024 * 1024)
+#define DEFAULT_SOCKET_BUF_SIZE (8 * 1024 * 1024)
 #endif
 
 // Create configurable variables with macro defaults
