@@ -63,6 +63,9 @@ class CompWorkspace:
         gui._addJSFragment("%s/javascript/Overview/Overview.js" % gui.contentpath)
 
     def _dostate(self, session, helptopic=None):
+        print("[DEBUG] dqmgui_prod/src/python/Overview/GUI.py::CompWorkspace._dostate() called")
+        print("[DEBUG] CompWorkspace._dostate() called")
+        print(f"[DEBUG] session keys in _dostate: {list(session.keys())}")
         view = self._getView(session[self.tag + ".view"])
         self.gui._noResponseCaching()
         return (

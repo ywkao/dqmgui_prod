@@ -1041,6 +1041,7 @@ class DQMWorkspace:
             elif not re.match(r"^\d+$", runnr):
                 raise HTTPError(500, "Incorrect run parameter")
             else:
+                print(f"[DEBUG] Setting session['dqm.sample.runnr'] = {int(runnr)}")
                 session["dqm.sample.runnr"] = int(runnr)
 
         if qplot != None:

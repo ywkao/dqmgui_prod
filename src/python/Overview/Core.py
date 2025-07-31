@@ -13,4 +13,10 @@ class CompCoreWorkspace(CompWorkspace):
         gui._addJSFragment("%s/javascript/Overview/Core.js" % gui.contentpath)
 
     def _state(self, session):
-        return self._dostate(session, "CERN_Core_infrastructure_monitor")
+        print("[DEBUG] dqmgui_prod/src/python/Overview/Core.py::Core._state() called")
+        print(f"[DEBUG] session keys: {list(session.keys())}")
+        print(f"[DEBUG] dqm.sample.runnr = {session.get('dqm.sample.runnr', 'NOT_FOUND')}")
+        print(f"[DEBUG] session data: {session}")
+        result = self._dostate(session, "CERN_Core_infrastructure_monitor")
+        print(f"[DEBUG] _dostate result: {result}")
+        return result
