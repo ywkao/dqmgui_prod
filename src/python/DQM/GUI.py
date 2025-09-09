@@ -1584,7 +1584,24 @@ class DQMContentWorkspace(Accelerator.DQMContentWorkspace, DQMWorkspace):
 
     # Return JSON object for the current session state.
     def sessionState(self, session, *args, **kwargs):
-        return self._state(session)
+        print(f"[DEBUG-PYTHON] DQMContentWorkspace - session runnr: {session.get('dqm.sample.runnr', 'NOT SET')}")
+
+        result = self._state(session)
+
+        # Debug: Print what _state returned (first 300 chars)
+        print(f"[DEBUG-PYTHON] DQMContentWorkspace _state() returned: {result[:300]}...")
+
+        # Get the actual run number from session and replace "(None)"
+        actual_run = session.get('dqm.sample.runnr', 'NO_RUN_SET')
+        result = result.replace('"run": "(None)"', f'"run": "{actual_run}"')
+        result = result.replace('"lumi": "(None)"', f'"lumi": "777"')
+        result = result.replace('"event": "(None)"', f'"event": "888"')
+
+        print(f"[DEBUG-PYTHON] After replacing - actual_run: {actual_run}")
+
+        return result
+
+        # return self._state(session)
 
     # -----------------------------------------------------------------
     # Reset the canvas back to the workspace default.

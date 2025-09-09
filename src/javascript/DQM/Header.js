@@ -561,10 +561,11 @@ GUI.Plugin.DQMHeaderRow = new function() {
     console.log("Lumi:", data.lumi);
     console.log("Event:", data.event);
     console.log("Raw data object:", data);
+
     var testRun = "500001";
+    _runNr.innerHTML = testRun;
 
     _runNr.innerHTML = data.run;
-    _runNr.innerHTML = testRun;
     _lumiNr.innerHTML = data.lumi;
     _eventNr.innerHTML = data.event;
     if (data.view.sample.type == 'live') {
