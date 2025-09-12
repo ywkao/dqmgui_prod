@@ -1273,7 +1273,9 @@ class DQMWorkspace:
             elif dt.year == now.year:
                 formatted_time = f"{dt.strftime('%a %b %d, %H:%M')}"
             else:
-                formatted_time = f"{dt.strftime('%a %b %d '%y, %H:%M')}"
+                date_part = dt.strftime('%a %b %d')
+                time_part = dt.strftime('%y, %H:%M')
+                formatted_time = f"{date_part} '{time_part}"
 
             result = result.replace("'runstart':\"(Not recorded)\"", f"'runstart':\"{formatted_time}\"")
             print(f"[DEBUG-Python] Converted Last-Modified to: {formatted_time}")
