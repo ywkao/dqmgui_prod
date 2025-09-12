@@ -21,7 +21,6 @@ from cherrypy.lib.static import serve_file
 from cherrypy.lib import cptools, httputil
 import os, re, time, socket, shutil, tempfile, cgi, json, hmac, hashlib
 
-from email.utils import parsedate_to_datetime
 from datetime import datetime
 
 DEF_DQM_PORT = 9090
@@ -1257,15 +1256,11 @@ class DQMWorkspace:
         actual_run = session.get('dqm.sample.runnr', 'NO_RUN_SET')
         result = result.replace("'run':\"(None)\"", f"'run':\"{actual_run}\"")
 
-        last_modified = response.headers.get("Last-Modified")
-        if last_modified:
-            print(f"[DEBUG-Python] Last-Modified header: {last_modified}")
+        try:
+            current_time = time.time()
+            dt = datetime.fromtimestamp(current_time)
+            now = datetime.now()
 
-            # Parse HTTP date
-            dt = parsedate_to_datetime(last_modified)
-            now = datetime.now(dt.tzinfo)
-
-            # Format like formatStartTime does
             if dt.date() == now.date():
                 formatted_time = f"Today {dt.strftime('%H:%M')}"
             elif dt.month == now.month and dt.year == now.year:
@@ -1278,9 +1273,10 @@ class DQMWorkspace:
                 formatted_time = f"{date_part} '{time_part}"
 
             result = result.replace("'runstart':\"(Not recorded)\"", f"'runstart':\"{formatted_time}\"")
-            print(f"[DEBUG-Python] Converted Last-Modified to: {formatted_time}")
-        else:
-            print(f"[DEBUG-Python] Error parsing Last-Modified '{last_modified}': {e}")
+            print(f"[DEBUG-Python] Set runstart to current time: {formatted_time}")
+
+        except Exception as e:
+            print(f"[DEBUG-Python] Error formatting current time: {e}")
 
         # result = result.replace("'lumi':\"(None)\"", f"'lumi':\"777\"")
         # result = result.replace("'event':\"(None)\"", f"'event':\"888\"")
