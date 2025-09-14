@@ -1273,10 +1273,11 @@ class DQMWorkspace:
                 formatted_time = f"{date_part} '{time_part}"
 
             result = result.replace("'runstart':\"(Not recorded)\"", f"'runstart':\"{formatted_time}\"")
-            print(f"[DEBUG-Python] Set runstart to current time: {formatted_time}")
+            # print(f"[DEBUG-Python] Set runstart to current time: {formatted_time}")
 
         except Exception as e:
-            print(f"[DEBUG-Python] Error formatting current time: {e}")
+            pass
+            # print(f"[DEBUG-Python] Error formatting current time: {e}")
 
         # result = result.replace("'lumi':\"(None)\"", f"'lumi':\"777\"")
         # result = result.replace("'event':\"(None)\"", f"'event':\"888\"")

@@ -553,17 +553,17 @@ GUI.Plugin.DQMHeaderRow = new function() {
     _service.innerHTML = data.service;
     _workspace.innerHTML = data.workspace;
 
-    // Debug logging
-    console.log("=== DEBUG-JS: Header Update ===");
-    console.log("Service:", data.service);
-    console.log("Workspace:", data.workspace);
-    console.log("Run:", data.run, "(type:", typeof data.run, ")");
-    console.log("Lumi:", data.lumi);
-    console.log("Event:", data.event);
-    console.log("Raw data object:", data);
+    // // Debug logging
+    // console.log("=== DEBUG-JS: Header Update ===");
+    // console.log("Service:", data.service);
+    // console.log("Workspace:", data.workspace);
+    // console.log("Run:", data.run, "(type:", typeof data.run, ")");
+    // console.log("Lumi:", data.lumi);
+    // console.log("Event:", data.event);
+    // console.log("Raw data object:", data);
 
-    var testRun = "500001";
-    _runNr.innerHTML = testRun;
+    // var testRun = "500001";
+    // _runNr.innerHTML = testRun;
 
     _runNr.innerHTML = data.run;
     _lumiNr.innerHTML = data.lumi;
