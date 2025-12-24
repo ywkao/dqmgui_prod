@@ -21,6 +21,9 @@ from cherrypy.lib.static import serve_file
 from cherrypy.lib import cptools, httputil
 import os, re, time, socket, shutil, tempfile, cgi, json, hmac, hashlib
 
+from email.utils import parsedate_to_datetime
+from datetime import datetime
+
 DEF_DQM_PORT = 9090
 
 # Validate DQM file paths.
@@ -1041,6 +1044,7 @@ class DQMWorkspace:
             elif not re.match(r"^\d+$", runnr):
                 raise HTTPError(500, "Incorrect run parameter")
             else:
+                # print(f"[DEBUG] Setting session['dqm.sample.runnr'] = {int(runnr)}")
                 session["dqm.sample.runnr"] = int(runnr)
 
         if qplot != None:
@@ -1248,6 +1252,40 @@ class DQMWorkspace:
                 raise HTTPError(500, "Invalid Certifcation Zoom show parameter")
             session["dqm.certzoom.show"] = certzoom == "yes"
 
+    def _fix_header_data(self, result, session):
+        """Fix header run/lumi/event data in the JSON response"""
+        actual_run = session.get('dqm.sample.runnr', 'NO_RUN_SET')
+        result = result.replace("'run':\"(None)\"", f"'run':\"{actual_run}\"")
+
+        last_modified = response.headers.get("Last-Modified")
+        if last_modified:
+            print(f"[DEBUG-Python] Last-Modified header: {last_modified}")
+
+            # Parse HTTP date
+            dt = parsedate_to_datetime(last_modified)
+            now = datetime.now(dt.tzinfo)
+
+            # Format like formatStartTime does
+            if dt.date() == now.date():
+                formatted_time = f"Today {dt.strftime('%H:%M')}"
+            elif dt.month == now.month and dt.year == now.year:
+                formatted_time = f"{dt.strftime('%a %d, %H:%M')}"
+            elif dt.year == now.year:
+                formatted_time = f"{dt.strftime('%a %b %d, %H:%M')}"
+            else:
+                date_part = dt.strftime('%a %b %d')
+                time_part = dt.strftime('%y, %H:%M')
+                formatted_time = f"{date_part} '{time_part}"
+
+            result = result.replace("'runstart':\"(Not recorded)\"", f"'runstart':\"{formatted_time}\"")
+            print(f"[DEBUG-Python] Converted Last-Modified to: {formatted_time}")
+        else:
+            print(f"[DEBUG-Python] Error parsing Last-Modified '{last_modified}': {e}")
+
+        # result = result.replace("'lumi':\"(None)\"", f"'lumi':\"777\"")
+        # result = result.replace("'event':\"(None)\"", f"'event':\"888\"")
+        return result
+
     # -----------------------------------------------------------------
     # Initialise a new session with the "start" URL.
     def start(self, session, **kwargs):
@@ -1296,19 +1334,22 @@ class DQMWorkspace:
     def sessionSetFilter(self, session, *args, **kwargs):
         self._set(session, filter=kwargs.get("n", "all"))
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Set global statistical display option.
     def sessionSetStats(self, session, *args, **kwargs):
         self._set(session, showstats=kwargs.get("showstats", None))
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Set global statistical display option.
     def sessionSetErrbars(self, session, *args, **kwargs):
         self._set(session, showerrbars=kwargs.get("showerrbars", None))
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Set global reference display override.
     def sessionSetReference(self, session, *args, **kwargs):
@@ -1323,7 +1364,8 @@ class DQMWorkspace:
             referenceobj4=kwargs.get("r4", None),
         )
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Set global reference display override.
     def sessionSetStripChart(self, session, *args, **kwargs):
@@ -1335,7 +1377,8 @@ class DQMWorkspace:
             stripomit=kwargs.get("omit", None),
         )
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Set sub-menu.  For notification only.
     def sessionSetSubMenu(self, session, *args, **kwargs):
@@ -1347,13 +1390,15 @@ class DQMWorkspace:
     def sessionSetSearch(self, session, *args, **kwargs):
         self._set(session, search=kwargs.get("rx", ""))
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Set the size of canvas objects.
     def sessionSetSize(self, session, *args, **kwargs):
         self._set(session, size=kwargs.get("sz", None))
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Turn play mode on or off.
     def sessionPlay(self, session, *args, **kwargs):
@@ -1366,7 +1411,8 @@ class DQMWorkspace:
         if self.name in session["dqm.focus"]:
             del session["dqm.focus"][self.name]
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Change the selected object.
     def sessionSetFocus(self, session, *args, **kwargs):
@@ -1377,7 +1423,8 @@ class DQMWorkspace:
         else:
             self._set(session, focus=name)
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Change panel display parameters.
     def sessionPanel(self, session, *args, **kwargs):
@@ -1405,7 +1452,8 @@ class DQMWorkspace:
             session["dqm.panel.%s.y" % name] = int(y)
 
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     def sessionSetJsonmode(self, session, *args, **kwargs):
         jsonmode = kwargs.get("mode", None)
@@ -1413,7 +1461,8 @@ class DQMWorkspace:
             session["dqm.zoom.jsonmode"] = jsonmode == "yes"
 
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     def sessionSetJSrootmode(self, session, *args, **kwargs):
         jsrootmode = kwargs.get("mode", None)
@@ -1421,7 +1470,8 @@ class DQMWorkspace:
             session["dqm.zoom.jsrootmode"] = jsrootmode == "yes"
 
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Change JSON window parameters.
     def sessionSetJsonZoom(self, session, *args, **kwargs):
@@ -1451,7 +1501,8 @@ class DQMWorkspace:
             session["dqm.zoom.jh"] = int(h)
 
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Change Zoom window parameters.
     def sessionSetZoom(self, session, *args, **kwargs):
@@ -1487,14 +1538,16 @@ class DQMWorkspace:
             session["dqm.zoom.h"] = int(h)
 
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     def sessionChangeRun(self, session, *args, **kwargs):
         forward = kwargs.get("forward", None)
         nextRun = self._changeRun(session, forward != None)
         session["dqm.sample.runnr"] = nextRun
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Change Zoom window parameters.
     def sessionSetCertZoom(self, session, *args, **kwargs):
@@ -1531,7 +1584,8 @@ class DQMWorkspace:
 
         self.gui._saveSession(session)
 
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
 
 # --------------------------------------------------------------------
@@ -1542,7 +1596,8 @@ class DQMSummaryWorkspace(Accelerator.DQMSummaryWorkspace, DQMWorkspace):
 
     # Return JSON object for the current session state.
     def sessionState(self, session, *args, **kwargs):
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
 
 # --------------------------------------------------------------------
@@ -1553,7 +1608,8 @@ class DQMCertificationWorkspace(Accelerator.DQMCertificationWorkspace, DQMWorksp
 
     # Return JSON object for the current session state.
     def sessionState(self, session, *args, **kwargs):
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
 
 # --------------------------------------------------------------------
@@ -1564,7 +1620,8 @@ class DQMQualityWorkspace(Accelerator.DQMQualityWorkspace, DQMWorkspace):
 
     # Return JSON object for the current session state.
     def sessionState(self, session, *args, **kwargs):
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
 
 # --------------------------------------------------------------------
@@ -1583,7 +1640,8 @@ class DQMContentWorkspace(Accelerator.DQMContentWorkspace, DQMWorkspace):
 
     # Return JSON object for the current session state.
     def sessionState(self, session, *args, **kwargs):
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # -----------------------------------------------------------------
     # Reset the canvas back to the workspace default.
@@ -1596,7 +1654,8 @@ class DQMContentWorkspace(Accelerator.DQMContentWorkspace, DQMWorkspace):
                 del session[key][self.name]
         self.initialiseSession(session)
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # -----------------------------------------------------------------
     # Change image parameters.
@@ -1635,7 +1694,8 @@ class DQMContentWorkspace(Accelerator.DQMContentWorkspace, DQMWorkspace):
             opts[opt] = val
 
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
 
 # --------------------------------------------------------------------
@@ -1662,7 +1722,8 @@ class DQMShiftWorkspace(DQMContentWorkspace):
         if kwargs.get("n", "").startswith(self.SHIFT_ROOT):
             return DQMContentWorkspace.sessionSetRoot(self, session, *args, **kwargs)
         else:
-            return self._state(session)
+            result = self._state(session)
+            return self._fix_header_data(result, session)
 
 
 # --------------------------------------------------------------------
@@ -1673,7 +1734,8 @@ class DQMSampleWorkspace(Accelerator.DQMSampleWorkspace, DQMWorkspace):
 
     # Return JSON object for the current session state.
     def sessionState(self, session, *args, **kwargs):
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Return back from sample selection without making changes.
     def sessionReturn(self, session, *args, **kwargs):
@@ -1691,7 +1753,8 @@ class DQMSampleWorkspace(Accelerator.DQMSampleWorkspace, DQMWorkspace):
             sampledynsearch=kwargs.get("dynsearch", None),
         )
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Select another sample.
     def sessionSelect(self, session, *args, **kwargs):
@@ -1713,7 +1776,8 @@ class DQMPlayWorkspace(Accelerator.DQMPlayWorkspace, DQMWorkspace):
 
     # Return JSON object for the current session state.
     def sessionState(self, session, *args, **kwargs):
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Return back from sample selection without making changes.
     def sessionStop(self, session, *args, **kwargs):
@@ -1727,12 +1791,14 @@ class DQMPlayWorkspace(Accelerator.DQMPlayWorkspace, DQMWorkspace):
             session, playinterval=kwargs.get("v", self.sessiondef["dqm.play.interval"])
         )
         self.gui._saveSession(session)
-        return self._state(session)
+        result = self._state(session)
+        return self._fix_header_data(result, session)
 
     # Select another sample.
     def sessionStep(self, session, *args, **kwargs):
         self._set(session, playpos=kwargs.get("pos", 0))
         if kwargs.get("move", "no") == "yes":
-            return self._state(session)
+            result = self._state(session)
+            return self._fix_header_data(result, session)
         else:
             return "Ta."

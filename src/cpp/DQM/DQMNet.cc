@@ -975,10 +975,10 @@ DQMNet::DQMNet(const std::string &appname /* = "" */)
   upstream_.port = downstream_.port = 0;
   upstream_.update = downstream_.update = false;
 
-  logme() << "[INFO] dqmgui_prod/src/cpp/DQM/DQMNet.cc::MESSAGE_SIZE_LIMIT: "
-          << (MESSAGE_SIZE_LIMIT / (1024 * 1024)) << " MB, "
-          << "SOCKET_BUF_SIZE: " << (SOCKET_BUF_SIZE / (1024 * 1024)) << " MB"
-          << std::endl;
+  // logme() << "[INFO] dqmgui_prod/src/cpp/DQM/DQMNet.cc::MESSAGE_SIZE_LIMIT: "
+  //         << (MESSAGE_SIZE_LIMIT / (1024 * 1024)) << " MB, "
+  //         << "SOCKET_BUF_SIZE: " << (SOCKET_BUF_SIZE / (1024 * 1024)) << " MB"
+  //         << std::endl;
 }
 
 DQMNet::~DQMNet(void) {
